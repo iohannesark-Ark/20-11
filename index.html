@@ -2108,35 +2108,36 @@
         tryNext();
       });
     }
-
-    async function loadPersonSlides(person) {
-      const folder = APP_CONFIG.imageFolder;
-      const tasks = [];
-      for (let num = person.imageStart; num <= person.imageEnd; num++) {
-        const candidates = [
-          `${folder}/${num}.jpg`,
-          `${folder}/${num}.png`,
-          `${folder}/${num}.jpeg`,
-          `${folder}/${num}.webp`,
-          `${num}.jpg`,
-          `${num}.png`
-        ];
-        tasks.push(
-          probeImage(candidates).then((src) => {
-            if (!src) return null;
-            const capIdx = (num - person.imageStart) % person.captions.length;
-            return {
-              type: "image",
-              src,
-              caption: person.captions[capIdx]
-            };
-          })
-        );
-      }
-      const results = await Promise.all(tasks);
-      return results.filter(Boolean);
-    }
-
+    
+async function loadPersonSlides(person) {
+  const prefix = APP_CONFIG.imageFolder ? `${APP_CONFIG.imageFolder}/` : "";
+  const tasks = [];
+  for (let num = person.imageStart; num <= person.imageEnd; num++) {
+    const candidates = [
+      `${prefix}${num}.jpg`,
+      `${prefix}${num}.JPG`,
+      `${prefix}${num}.png`,
+      `${prefix}${num}.PNG`,
+      `${prefix}${num}.jpeg`,
+      `${prefix}${num}.JPEG`,
+      `${prefix}${num}.webp`
+    ];
+    tasks.push(
+      probeImage(candidates).then((src) => {
+        if (!src) return null;
+        const capIdx = (num - person.imageStart) % person.captions.length;
+        return {
+          type: "image",
+          src,
+          caption: person.captions[capIdx]
+        };
+      })
+    );
+  }
+  const results = await Promise.all(tasks);
+  return results.filter(Boolean);
+}
+    
     async function initGalleryScene() {
       const person = state.selectedPerson || APP_CONFIG.people[0];
       document.getElementById("gallery-heading").textContent = `Album Kỷ Niệm · ${person.name}`;
