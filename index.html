@@ -1268,7 +1268,7 @@
         "Bắt được thì mới cho chọn nhé! 😝"
       ],
       teaseEmojis: ["🥺", "😜", "🤭", "🙈", "😆", "😝"],
-      imageFolder: "images", // Thư mục chứa ảnh 1..40 (cũng tự kiểm tra thư mục gốc nếu chưa tạo folder)
+      imageFolder: "", // Thư mục chứa ảnh 1..40 (cũng tự kiểm tra thư mục gốc nếu chưa tạo folder)
       people: [
         {
           id: "van",
@@ -2109,34 +2109,56 @@
       });
     }
     
-async function loadPersonSlides(person) {
-  const prefix = APP_CONFIG.imageFolder ? `${APP_CONFIG.imageFolder}/` : "";
-  const tasks = [];
-  for (let num = person.imageStart; num <= person.imageEnd; num++) {
-    const candidates = [
-      `${prefix}${num}.jpg`,
-      `${prefix}${num}.JPG`,
-      `${prefix}${num}.png`,
-      `${prefix}${num}.PNG`,
-      `${prefix}${num}.jpeg`,
-      `${prefix}${num}.JPEG`,
-      `${prefix}${num}.webp`
-    ];
-    tasks.push(
-      probeImage(candidates).then((src) => {
-        if (!src) return null;
-        const capIdx = (num - person.imageStart) % person.captions.length;
-        return {
-          type: "image",
-          src,
-          caption: person.captions[capIdx]
-        };
-      })
-    );
-  }
-  const results = await Promise.all(tasks);
-  return results.filter(Boolean);
-}
+const KNOWN_IMAGES = {
+      // Cô Vân (1 - 10)
+      1: "1.jpg",   2: "2.webp",  3: "3.webp",  4: "4.webp",
+      5: "5.jpg",   6: "6.webp",  7: "7.jpg",   8: "8.jpg",
+      // Cô Dung (11 - 20)
+      11: "11.jpg", 12: "12.jpg", 13: "13.jpg", 14: "14.jpg",
+      15: "15.jpg", 16: "16.jpg", 17: "17.jpg", 18: "18.jpg",
+      // Thầy Tuấn (21 - 30)
+      21: "21.jpg", 22: "22.jpg", 23: "23.jpg", 24: "24.jpg",
+      // Chị Tuyền (31 - 40)
+      31: "31.jpg", 32: "32.jpg", 33: "33.jpg", 34: "34.jpg", 35: "35.jpg"
+    };
+
+    async function loadPersonSlides(person) {
+      const prefix = APP_CONFIG.imageFolder ? `${APP_CONFIG.imageFolder}/` : "";
+      const tasks = [];
+
+      for (let num = person.imageStart; num <= person.imageEnd; num++) {
+        const fallbackList = [
+          `${prefix}${num}.jpg`,
+          `${prefix}${num}.webp`,
+          `${prefix}${num}.png`,
+          `${prefix}${num}.jpeg`,
+          `${prefix}${num}.JPG`,
+          `${prefix}${num}.WEBP`,
+          `${prefix}${num}.PNG`,
+          `${prefix}${num}.JPEG`
+        ];
+
+        const knownSrc = KNOWN_IMAGES[num] ? `${prefix}${KNOWN_IMAGES[num]}` : null;
+        const candidates = knownSrc
+          ? [knownSrc, ...fallbackList.filter((url) => url !== knownSrc)]
+          : fallbackList;
+
+        tasks.push(
+          probeImage(candidates).then((src) => {
+            if (!src) return null;
+            const capIdx = (num - person.imageStart) % person.captions.length;
+            return {
+              type: "image",
+              src,
+              caption: person.captions[capIdx]
+            };
+          })
+        );
+      }
+
+      const results = await Promise.all(tasks);
+      return results.filter(Boolean);
+    }
     
     async function initGalleryScene() {
       const person = state.selectedPerson || APP_CONFIG.people[0];
