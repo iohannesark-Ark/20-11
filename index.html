@@ -1891,7 +1891,9 @@
       cursor.style.display = "inline-block";
       clearInterval(state.typewriterTimer);
 
-      const chars = Array.from(APP_CONFIG.prankQuestion);
+    const p = (state.selectedPerson && state.selectedPerson.pronoun) || "Cô";
+    const questionText = APP_CONFIG.prankQuestion.replace(/\{p\}/g, p);
+    const chars = Array.from(questionText);
       let idx = 0;
       state.typewriterTimer = setInterval(() => {
         target.textContent += chars[idx];
@@ -1960,7 +1962,8 @@
       } while (tIdx === state.lastTeaseIdx && APP_CONFIG.teaseMessages.length > 1);
       state.lastTeaseIdx = tIdx;
 
-      teaseBubble.textContent = APP_CONFIG.teaseMessages[tIdx];
+      const p = (state.selectedPerson && state.selectedPerson.pronoun) || "Cô";
+      teaseBubble.textContent = APP_CONFIG.teaseMessages[tIdx].replace(/\{p\}/g, p);
       teaseBubble.classList.add("visible");
 
       prankEmoji.textContent = APP_CONFIG.teaseEmojis[state.noAttempts % APP_CONFIG.teaseEmojis.length];
